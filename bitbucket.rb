@@ -1,3 +1,24 @@
+dep 'bitbucket team', :team, :bitbucket_username, :bitbucket_password do
+	bitbucket_username.default(ENV['USER'] + '_atlassian')
+	bitbucket_password.ask('What is your bitbucket password?')
+
+	require 'net/http'
+	require 'json'
+
+	bitbucket_url ='https://api.bitbucket.org/1.0/user/privileges'
+	uri = URI(bitbucket_url)
+	http = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https')
+
+	met? {
+		request = Net::HTTP::Get.new(uri.request_uri)
+		request.basic_auth(bitbucket_username, bitbucket_password)
+		response = http.request(request)
+		teams = JSON.parse(response.body)
+
+		teams.has_key?(team)
+	}
+end
+
 dep 'bitbucket ssh key', :bitbucket_username, :bitbucket_password, :ssh_key do
 	bitbucket_username.default(ENV['USER'] + '_atlassian')
 	bitbucket_password.ask('What is your bitbucket password?')

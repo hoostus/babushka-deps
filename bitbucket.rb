@@ -1,6 +1,7 @@
 dep 'bitbucket team', :team, :bitbucket_username, :bitbucket_password do
-	bitbucket_username.default(ENV['USER'] + '_atlassian')
+	bitbucket_username.ask('What is the name of your bitbucket account?').default(ENV['USER'] + '_atlassian')
 	bitbucket_password.ask('What is your bitbucket password?')
+	team.ask('Which team do you want to check membership for?').default('atlassian')
 
 	require 'net/http'
 	require 'json'
@@ -13,9 +14,13 @@ dep 'bitbucket team', :team, :bitbucket_username, :bitbucket_password do
 		request = Net::HTTP::Get.new(uri.request_uri)
 		request.basic_auth(bitbucket_username, bitbucket_password)
 		response = http.request(request)
-		teams = JSON.parse(response.body)
+		response = JSON.parse(response.body)
 
-		teams.has_key?(team)
+		response['teams'].has_key? team.to_s
+	}
+
+	meet {
+		log "Raise an ticket at http://go/atlasdesk asking for you account to added to the #{team} team."
 	}
 end
 
